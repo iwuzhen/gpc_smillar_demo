@@ -1,4 +1,4 @@
-from modelscope import AutoModel
+from transformers import AutoModel
 
 def download_model():
     model_name = "jinaai/jina-embeddings-v2-base-en"  # Replace with your model name
