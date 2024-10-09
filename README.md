@@ -15,3 +15,8 @@ git submodule add git@github.com:iwuzhen/page-gutenberg-vs-reddit-via-streamlit.
 export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
 pyenv shell system followed by python3 -m keyring --disable
 ```
+
+## change log
+
+# 2024-10-09
+1. remove embedding model and use remote api

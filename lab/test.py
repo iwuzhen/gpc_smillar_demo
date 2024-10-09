@@ -255,7 +255,18 @@ def task_2_token_anlysis():
             
         r.xack(last_stream_name, group_name, msg_id)
     
-    
+
+import requests
+import numpy as np
+def embedding_text(sentence_list):
+    response = requests.post(url="http://192.168.1.224:9997/v1/embeddings",
+                  json={
+        "model": "jina-embeddings-v2-base-en",
+        "input": sentence_list
+    } )
+    data = response.json()
+    return list(map(lambda x: np.array(x['embedding']), data['data']))
+
 # sts 计算    
 def task_3_sts_anlysis():
     from scipy.spatial.distance import (
@@ -266,9 +277,7 @@ def task_3_sts_anlysis():
         chebyshev,
     )
     
-    from modelscope import AutoModel
-    JinNaAI_Model = AutoModel.from_pretrained('jinaai/jina-embeddings-v2-base-en', trust_remote_code=True) # trust_remote_code is needed to use the encode method
-    
+
     DATABASE = pymongo.MongoClient("192.168.1.222").temporary_token_similarity
     Collection = DATABASE[collection_name]
 
@@ -287,7 +296,7 @@ def task_3_sts_anlysis():
         connected_tokens_2 =  int(msg_data[b'connected_tokens_2'])
         tree_edit_distance =  int(msg_data[b'tree_edit_distance'])
         
-        embeddings = JinNaAI_Model.encode([plaintext_a, plaintext_b])
+        embeddings = embedding_text([plaintext_a, plaintext_b])
         cosine_similarity = cosine(embeddings[0],embeddings[1])
         euclidean_similarity = euclidean(embeddings[0],embeddings[1])
         minkowski_similarity = minkowski(embeddings[0],embeddings[1])

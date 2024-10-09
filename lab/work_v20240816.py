@@ -93,6 +93,17 @@ def graph_link_maker():
         p.join()
 
 
+import requests
+import numpy as np
+def embedding_text(sentence_list):
+    response = requests.post(url="http://192.168.1.224:9997/v1/embeddings",
+                  json={
+        "model": "jina-embeddings-v2-base-en",
+        "input": sentence_list
+    } )
+    data = response.json()
+    return list(map(lambda x: np.array(x['embedding']), data['data']))
+
 # sts 计算    
 def task_1_sts_anlysis():
     from scipy.spatial.distance import (
@@ -103,9 +114,6 @@ def task_1_sts_anlysis():
         chebyshev,
     )
     
-    from modelscope import AutoModel
-    JinNaAI_Model = AutoModel.from_pretrained('jinaai/jina-embeddings-v2-base-en', trust_remote_code=True) # trust_remote_code is needed to use the encode method
-
     doc_list = [doc for doc in tqdm.tqdm(collection_edge.find({'sts_v1': {'$exists': False}, }))]
     for doc in tqdm.tqdm(doc_list):
         sID = doc['s']
@@ -120,7 +128,7 @@ def task_1_sts_anlysis():
             continue
         
         
-        embeddings = JinNaAI_Model.encode([splaintext, tplaintext])
+        embeddings = embedding_text([splaintext, tplaintext])
         cosine_similarity = cosine(embeddings[0],embeddings[1])
         euclidean_similarity = euclidean(embeddings[0],embeddings[1])
         minkowski_similarity = minkowski(embeddings[0],embeddings[1])

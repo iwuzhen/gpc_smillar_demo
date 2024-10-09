@@ -7,5 +7,5 @@ demo:
 main:
 	poetry run streamlit run main.py --server.port 18502
 
-sync:
-	rsync -avz --delete --exclude=".git" ./* 192.168.1.221:~/workspace/gpc_demo
+build:
+	docker build -t test .

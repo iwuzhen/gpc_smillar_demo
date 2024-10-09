@@ -6,7 +6,6 @@ import collections
 import pandas as pd
 import concurrent.futures
 from functools import lru_cache
-from modelscope import AutoModel
 from numpy.linalg import norm
 import pathlib
 import requests
@@ -14,6 +13,8 @@ import redis
 import psycopg
 import json
 import gzip
+import networkx as nx
+import numpy as np
 
 
 @st.cache_resource
@@ -63,22 +64,20 @@ def get_neo4j_connection():
             auth=(st.secrets["neo4j_user"], st.secrets["neo4j_password"],),
         )
 
-
-@st.cache_resource
-def get_jinaai_mode():
-    model = AutoModel.from_pretrained('jinaai/jina-embeddings-v2-base-en', trust_remote_code=True) # trust_remote_code is needed to use the encode method
-    return model
-
-@st.cache_resource
-def get_sts_model():
-    JinNaAI_Model = get_jinaai_mode()
-    return JinNaAI_Model
+@st.cache_data(max_entries=1_000)
+def embedding_text(sentence_list):
+    response = requests.post(url="http://192.168.1.224:9997/v1/embeddings",
+                  json={
+        "model": "jina-embeddings-v2-base-en",
+        "input": sentence_list
+    } )
+    data = response.json()
+    return list(map(lambda x: np.array(x['embedding']), data['data']))
 
 cos_sim = lambda a,b: (a @ b.T) / (norm(a)*norm(b))
 
 def calculate_similarity(sentence1, sentence2):
-    JinNaAI_Model = get_sts_model()
-    embeddings = JinNaAI_Model.encode([sentence1, sentence2])
+    embeddings = embedding_text([sentence1, sentence2])
     return cos_sim(embeddings[0], embeddings[1])
 
 def format_text(text):
@@ -491,7 +490,6 @@ def calculate_cartesian_product_similarity_pgs(tuple_1, tuple_2, interest_tuple)
     return df_ok, df_out
 
 
-import networkx as nx
 def get_max_connected_graph(edges_with_weight):
     G = nx.Graph()
     G.add_weighted_edges_from(edges_with_weight)
