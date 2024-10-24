@@ -1,0 +1,6 @@
+services:
+  web:
+    build: .
+    ports:
+      - "18502:80"
+    restart: always
